@@ -21,3 +21,4 @@ This is Demo project for CRA7_demo 2024
 - pip install torchaudio
 - pip install soundfile
 - pip install scipy
+- pip install loguru
