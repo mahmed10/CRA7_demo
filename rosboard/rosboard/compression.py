@@ -253,13 +253,14 @@ def compress_point_cloud2(msg, output):
     output["__comp"] = ["data"]
 
     field_names = [field.name for field in msg.fields]
+    # print(msg.fields)
 
     if "x" not in field_names or "y" not in field_names:
         output["_error"] = "PointCloud2 error: must contain at least 'x' and 'y' fields for visualization"
         return
 
     if "z" in field_names:
-        decode_fields = ("x", "y", "z")
+        decode_fields = ("x", "y", "z", "intensity")
     else:
         decode_fields = ("x", "y")
     
@@ -267,6 +268,8 @@ def compress_point_cloud2(msg, output):
         points = decode_pcl2(msg, field_names = decode_fields, skip_nans = True)
     except AssertionError as e:
         output["_error"] = "PointCloud2 error: %s" % str(e)
+
+    # print(points.size)
     
     if points.size > 65536:
         output["_warn"] = "Point cloud too large, randomly subsampling to 65536 points."
@@ -294,6 +297,9 @@ def compress_point_cloud2(msg, output):
         if zmax - zmin < 1.0:
             zmax = zmin + 1.0
         zpoints_uint16 = (65535 * (zpoints - zmin) / (zmax - zmin)).astype(np.uint16)
+        ipoints = points['intensity'].astype(np.float32)
+        # print(np.unique(ipoints))
+        ipoints_uint16 = (65535 * ipoints / 255).astype(np.uint16)
     else:
         zmax = 1.0
         zmin = 0.0
@@ -302,6 +308,8 @@ def compress_point_cloud2(msg, output):
     bounds_uint16 = [xmin, xmax, ymin, ymax, zmin, zmax]
     if np.little_endian:
         points_uint16 = np.stack((xpoints_uint16, ypoints_uint16, zpoints_uint16),1).ravel().view(dtype=np.uint8)
+        ipoints_uint16 = ipoints_uint16.ravel().view(dtype=np.uint8)
+        # print(xpoints_uint16.shape, points_uint16.shape, ipoints_uint16.shape)
     else:
         points_uint16 = np.stack((xpoints_uint16, ypoints_uint16, zpoints_uint16),1).ravel().byteswap().view(dtype=np.uint8)
 
@@ -309,6 +317,7 @@ def compress_point_cloud2(msg, output):
         "type": "xyz",
         "bounds": list(map(float, bounds_uint16)),
         "points": base64.b64encode(points_uint16).decode(),
+        "intensities": base64.b64encode(ipoints_uint16).decode()
     }
 
 
