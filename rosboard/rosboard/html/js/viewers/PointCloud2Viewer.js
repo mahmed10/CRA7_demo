@@ -68,7 +68,12 @@ class PointCloud2Viewer extends Space3DViewer {
     let points_data = this._base64decode(msg._data_uint16.points);
     let points_view = new DataView(points_data);
 
+    let int_data = this._base64decode(msg._data_uint16.intensities);
+    let int_view = new DataView(int_data)
+
     let points = new Float32Array(Math.round(points_data.byteLength / 2));
+    let intensities = new Float32Array(Math.round(int_data.byteLength / 2));
+    // console.log(intensities)
 
     let xrange = bounds[1] - bounds[0];
     let xmin = bounds[0];
@@ -82,12 +87,14 @@ class PointCloud2Viewer extends Space3DViewer {
       points[3*i] = (points_view.getUint16(offset, true) / 65535) * xrange + xmin;
       points[3*i+1] = (points_view.getUint16(offset+2, true) / 65535) * yrange + ymin;
       points[3*i+2] = (points_view.getUint16(offset+4, true) / 65535) * zrange + zmin;
+      intensities[i] = (int_view.getUint16(i*2, true) / 65535) * 255 + 0;
     }
+    console.log(intensities);
 
     this.draw([
       {type: "path", data: [0, 0, 0, 1], color: "#00f060", lineWidth: 2},
       {type: "path", data: [0, 0, 1, 0], color: "#f06060", lineWidth: 2},
-      {type: "points", data: points, zmin: zmin, zmax: zmin + zrange},
+      {type: "points", data: points, zmin: zmin, zmax: zmin + zrange, intensities:intensities},
     ]);
   }
 
