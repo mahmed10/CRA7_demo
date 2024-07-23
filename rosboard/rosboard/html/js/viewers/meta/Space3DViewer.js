@@ -227,11 +227,11 @@ class Space3DViewer extends Viewer {
       let drawObject = drawObjects[i];
       if(drawObject.type === "points") {
         let colors = new Float32Array(drawObject.data.length / 3 * 4);
-        let zmin = drawObject.zmin || -2;
-        let zmax = drawObject.zmax || 2;
+        let zmin = 0 || -2;
+        let zmax = 255 || 2;
         let zrange = zmax - zmin;
         for(let j=0; j < drawObject.data.length / 3; j++) {
-          let c = this._getColor(drawObject.data[3*j+2], zmin, zmax)
+          let c = this._getColor(drawObject.intensities[j+2], zmin, zmax)
           colors[4*j] = c[0];
           colors[4*j+1] = c[1];
           colors[4*j+2] = c[2];
