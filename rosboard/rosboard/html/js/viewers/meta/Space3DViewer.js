@@ -185,24 +185,24 @@ class Space3DViewer extends Viewer {
 
     this.toyCarVertices = [
       // Car body (main part)
-      -1, -0.5, -1.05, // bottom (scaled 30% less)
-      1, -0.5, -1.05,
-      1, 0.5, -1.05,
-      -1, 0.5, -1.05,
-      -1, -0.5, -0.35,
-      1, -0.5, -0.35,
-      1, 0.5, -0.35,
-      -1, 0.5, -0.35,
+      -1.2, -0.5, -1.55, // bottom (scaled 30% less)
+      1.2, -0.5, -1.55,
+      1.2, 0.5, -1.55,
+      -1.2, 0.5, -1.55,
+      -1.2, -0.5, -0.85,
+      1.2, -0.5, -0.85,
+      1.2, 0.5, -0.85,
+      -1.2, 0.5, -0.85,
 
       // Car roof (sloped part)
-      -0.6, -0.4, -0.35, // bottom (scaled 30% less)
-      0.6, -0.4, -0.35,
-      0.6, 0.4, -0.35,
-      -0.6, 0.4, -0.35,
-      -0.6, -0.4, 0.14,
-      0.6, -0.4, 0.14,
-      0.6, 0.4, 0.14,
-      -0.6, 0.4, 0.14,
+      -0.72, -0.4, -0.85, // bottom (scaled 30% less)
+      0.72, -0.4, -0.85,
+      0.72, 0.4, -0.85,
+      -0.72, 0.4, -0.85,
+      -0.72, -0.4, -0.36,
+      0.72, -0.4, -0.36,
+      0.72, 0.4, -0.36,
+      -0.72, 0.4, -0.36,
     ].map(v => v / 3); // Scale the vertices to 1/3 size
 
     // Create vertical circular wheels
@@ -221,14 +221,14 @@ class Space3DViewer extends Viewer {
     let wheelSegments = 20;
     let wheelRadius = 0.2 / 3; // Scaled to 1/3 size
     this.toyCarVertices = this.toyCarVertices.concat(
-      this.createCircularWheel(-0.8 / 3, -0.6 / 3, -1.19 / 3, wheelRadius, wheelSegments),
-      this.createCircularWheel(0.8 / 3, -0.6 / 3, -1.19 / 3, wheelRadius, wheelSegments),
-      this.createCircularWheel(-0.8 / 3, 0.6 / 3, -1.19 / 3, wheelRadius, wheelSegments),
-      this.createCircularWheel(0.8 / 3, 0.6 / 3, -1.19 / 3, wheelRadius, wheelSegments)
+      this.createCircularWheel(-0.96 / 3, -0.6 / 3, -1.69 / 3, wheelRadius, wheelSegments),
+      this.createCircularWheel(0.96 / 3, -0.6 / 3, -1.69 / 3, wheelRadius, wheelSegments),
+      this.createCircularWheel(-0.96 / 3, 0.6 / 3, -1.69 / 3, wheelRadius, wheelSegments),
+      this.createCircularWheel(0.96 / 3, 0.6 / 3, -1.69 / 3, wheelRadius, wheelSegments)
     );
 
     this.toyCarColors = [
-      // Car body and roof
+      // Car body
       1, 1, 0, 1,  // yellow
       1, 1, 0, 1,
       1, 1, 0, 1,
@@ -237,14 +237,16 @@ class Space3DViewer extends Viewer {
       1, 1, 0, 1,
       1, 1, 0, 1,
       1, 1, 0, 1,
-      1, 1, 0, 1,
-      1, 1, 0, 1,
-      1, 1, 0, 1,
-      1, 1, 0, 1,
-      1, 1, 0, 1,
-      1, 1, 0, 1,
-      1, 1, 0, 1,
-      1, 1, 0, 1,
+
+      // Car roof
+      0.83, 0.83, 0.83, 1,  // light grey
+      0.83, 0.83, 0.83, 1,
+      0.83, 0.83, 0.83, 1,
+      0.83, 0.83, 0.83, 1,
+      0.83, 0.83, 0.83, 1,
+      0.83, 0.83, 0.83, 1,
+      0.83, 0.83, 0.83, 1,
+      0.83, 0.83, 0.83, 1,
     ];
 
     // Add black color for wheels
@@ -299,12 +301,6 @@ class Space3DViewer extends Viewer {
     } else if (v == 170.0) {
       c[0] = 0;
       c[1] = 0;
-    } else if (v == 85.0) {
-      c[0] = 0;
-      c[2] = 0;
-    } else if (v == 200.0) {
-      c[1] = 0.75;
-      c[2] = 0.796; 
     } else if (v < (vmin + 0.25 * dv)) {
       c[0] = 0;
       c[1] = 4 * (v - vmin) / dv;
