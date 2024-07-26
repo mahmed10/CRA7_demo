@@ -27,7 +27,7 @@ class Space3DViewer extends Viewer {
         "width": "100%",
         "height": "0",
         "padding-bottom": "100%",
-        "background": "#303035",
+        "background": "#4e4e4c",
         "position": "relative",
         "overflow": "hidden",
       })
@@ -36,11 +36,11 @@ class Space3DViewer extends Viewer {
     let that = this;
 
     this.gl = GL.create({ version:1, width: 500, height: 500});
-	  this.wrapper2[0].appendChild(this.gl.canvas);
+    this.wrapper2[0].appendChild(this.gl.canvas);
     $(this.gl.canvas).css("width", "100%");
-	  this.gl.animate(); // launch loop
+    this.gl.animate(); // launch loop
 
-		this.cam_pos = [0,100,100];
+    this.cam_pos = [0,100,100];
     this.cam_theta = -1.5707;
     this.cam_phi = 1.0;
     this.cam_r = 50.0;
@@ -58,8 +58,8 @@ class Space3DViewer extends Viewer {
     this.temp = mat4.create();
 
     this.gl.captureMouse(true, true);
-		this.gl.onmouse = function(e) {
-			if(e.dragging) {
+    this.gl.onmouse = function(e) {
+      if(e.dragging) {
         if(e.rightButton) {
           that.cam_offset_x += e.deltax/30 * Math.sin(that.cam_theta);
           that.cam_offset_y -= e.deltax/30 * Math.cos(that.cam_theta);
@@ -80,8 +80,8 @@ class Space3DViewer extends Viewer {
           }
           that.updatePerspective();
         }
-			}
-		}
+      }
+    }
 
     this.gl.onmousewheel = function(e) {
       that.cam_r -= e.delta;
@@ -98,7 +98,7 @@ class Space3DViewer extends Viewer {
       that.view = mat4.create();
       mat4.perspective(that.proj, 45 * DEG2RAD, that.gl.canvas.width / that.gl.canvas.height, 0.1, 1000);
       mat4.lookAt(that.view, that.cam_pos, [this.cam_offset_x,this.cam_offset_y, this.cam_offset_z], [0,0,1]);
-	    mat4.multiply(that.mvp, that.proj, that.view);
+      mat4.multiply(that.mvp, that.proj, that.view);
     }
 
     this.updatePerspective();
@@ -124,7 +124,8 @@ class Space3DViewer extends Viewer {
     ');
     //generic gl flags and settings
     this.gl.clearColor(0.1,0.1,0.1,1);
-    this.gl.disable( this.gl.DEPTH_TEST );
+    this.gl.enable(this.gl.DEPTH_TEST); // Enable depth test
+    this.gl.depthFunc(this.gl.LEQUAL); // Near things obscure far things
 
     //rendering loop
     this.gl.ondraw = function() {
@@ -141,6 +142,11 @@ class Space3DViewer extends Viewer {
             u_color: [1,1,1,1],
             u_mvp: that.mvp
           }).draw(that.drawObjectsGl[i].mesh, gl.LINES);
+        } else if(that.drawObjectsGl[i].type === "triangles") {
+          that.shader.uniforms({
+            u_color: [1,1,1,1],
+            u_mvp: that.mvp
+          }).draw(that.drawObjectsGl[i].mesh, gl.TRIANGLES);
         }
       }
     };
@@ -175,12 +181,106 @@ class Space3DViewer extends Viewer {
 
     this.gridMesh = GL.Mesh.load({vertices: this.gridPoints, colors: this.gridColors}, null, null, this.gl);
 
-    // initialize static mesh for axes
+    // initialize static mesh for toy car
 
-    this.axesPoints = [ 0,0,0, 1,0,0, 0,0,0, 0,1,0, 0,0,0, 0,0,1, ];
-    this.axesColors = [ 1,0,0,1, 1,0,0,1, 0,1,0,1, 0,1,0,1, 0,0.5,1,1, 0,0.5,1,1, ];
+    this.toyCarVertices = [
+      // Car body (main part)
+      -1, -0.5, -1.05, // bottom (scaled 30% less)
+      1, -0.5, -1.05,
+      1, 0.5, -1.05,
+      -1, 0.5, -1.05,
+      -1, -0.5, -0.35,
+      1, -0.5, -0.35,
+      1, 0.5, -0.35,
+      -1, 0.5, -0.35,
 
-    this.axesMesh = GL.Mesh.load({vertices: this.axesPoints, colors: this.axesColors});
+      // Car roof (sloped part)
+      -0.6, -0.4, -0.35, // bottom (scaled 30% less)
+      0.6, -0.4, -0.35,
+      0.6, 0.4, -0.35,
+      -0.6, 0.4, -0.35,
+      -0.6, -0.4, 0.14,
+      0.6, -0.4, 0.14,
+      0.6, 0.4, 0.14,
+      -0.6, 0.4, 0.14,
+    ].map(v => v / 3); // Scale the vertices to 1/3 size
+
+    // Create vertical circular wheels
+    this.createCircularWheel = (xOffset, yOffset, zOffset, radius, segments) => {
+      let vertices = [];
+      for (let i = 0; i < segments; i++) {
+        let theta = 2 * Math.PI * i / segments;
+        let nextTheta = 2 * Math.PI * (i + 1) / segments;
+        vertices.push(xOffset, yOffset, zOffset);
+        vertices.push(xOffset + radius * Math.cos(theta), yOffset, zOffset + radius * Math.sin(theta));
+        vertices.push(xOffset + radius * Math.cos(nextTheta), yOffset, zOffset + radius * Math.sin(nextTheta));
+      }
+      return vertices;
+    };
+
+    let wheelSegments = 20;
+    let wheelRadius = 0.2 / 3; // Scaled to 1/3 size
+    this.toyCarVertices = this.toyCarVertices.concat(
+      this.createCircularWheel(-0.8 / 3, -0.6 / 3, -1.19 / 3, wheelRadius, wheelSegments),
+      this.createCircularWheel(0.8 / 3, -0.6 / 3, -1.19 / 3, wheelRadius, wheelSegments),
+      this.createCircularWheel(-0.8 / 3, 0.6 / 3, -1.19 / 3, wheelRadius, wheelSegments),
+      this.createCircularWheel(0.8 / 3, 0.6 / 3, -1.19 / 3, wheelRadius, wheelSegments)
+    );
+
+    this.toyCarColors = [
+      // Car body and roof
+      1, 1, 0, 1,  // yellow
+      1, 1, 0, 1,
+      1, 1, 0, 1,
+      1, 1, 0, 1,
+      1, 1, 0, 1,
+      1, 1, 0, 1,
+      1, 1, 0, 1,
+      1, 1, 0, 1,
+      1, 1, 0, 1,
+      1, 1, 0, 1,
+      1, 1, 0, 1,
+      1, 1, 0, 1,
+      1, 1, 0, 1,
+      1, 1, 0, 1,
+      1, 1, 0, 1,
+      1, 1, 0, 1,
+    ];
+
+    // Add black color for wheels
+    let wheelColor = [];
+    for (let i = 0; i < 4 * wheelSegments * 3; i++) {
+      wheelColor.push(0, 0, 0, 1);
+    }
+    this.toyCarColors = this.toyCarColors.concat(wheelColor);
+
+    this.toyCarIndices = [
+      // Car body (main part)
+      0, 1, 2,  0, 2, 3,
+      4, 5, 6,  4, 6, 7,
+      0, 1, 5,  0, 5, 4,
+      2, 3, 7,  2, 7, 6,
+      0, 3, 7,  0, 7, 4,
+      1, 2, 6,  1, 6, 5,
+
+      // Car roof (sloped part)
+      8, 9, 10,  8, 10, 11,
+      12, 13, 14,  12, 14, 15,
+      8, 9, 13,  8, 13, 12,
+      10, 11, 15,  10, 15, 14,
+      8, 11, 15,  8, 15, 12,
+      9, 10, 14,  9, 14, 13,
+    ];
+
+    // Add indices for circular wheels
+    for (let i = 0; i < 4; i++) {
+      let baseIndex = 16 + i * wheelSegments * 3;
+      for (let j = 0; j < wheelSegments * 3; j += 3) {
+        this.toyCarIndices.push(baseIndex + j, baseIndex + j + 1, baseIndex + j + 2);
+      }
+    }
+
+    this.toyCarMesh = GL.Mesh.load({vertices: this.toyCarVertices, colors: this.toyCarColors, triangles: this.toyCarIndices}, null, null, this.gl);
   }
 
   _getColor(v, vmin, vmax) {
@@ -194,7 +294,18 @@ class Space3DViewer extends Viewer {
     let dv = vmax - vmin;
     if(dv < 1e-2) dv = 1e-2;
 
-    if (v < (vmin + 0.25 * dv)) {
+    if (v == 0.0) {
+      c[0] = 1;
+    } else if (v == 170.0) {
+      c[0] = 0;
+      c[1] = 0;
+    } else if (v == 85.0) {
+      c[0] = 0;
+      c[2] = 0;
+    } else if (v == 200.0) {
+      c[1] = 0.75;
+      c[2] = 0.796; 
+    } else if (v < (vmin + 0.25 * dv)) {
       c[0] = 0;
       c[1] = 4 * (v - vmin) / dv;
     } else if (v < (vmin + 0.5 * dv)) {
@@ -217,11 +328,11 @@ class Space3DViewer extends Viewer {
 
     // draw grid
     
-    drawObjectsGl.push({type: "lines", mesh: this.gridMesh});
+    // drawObjectsGl.push({type: "lines", mesh: this.gridMesh});
 
-    // draw axes
+    // draw toy car
 
-    drawObjectsGl.push({type: "lines", mesh: this.axesMesh});
+    drawObjectsGl.push({type: "triangles", mesh: this.toyCarMesh});
 
     for(let i in drawObjects) {
       let drawObject = drawObjects[i];
